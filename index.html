@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>doge-watcher</title>
+    <script language="javascript" type="text/javascript">
+
+        var price = {};
+        price = get_query(); //url 파라미터 c:코인종류 , p:가격
+        if(price === false){
+            price = {
+                //c: 'KRW-DOGE',
+                c: 'KRW-DOGE',
+                p: 730
+            };    
+        }
+        
+        
+        var coin_name=price.c;
+
+
+        
+        var socket; // 소켓
+        // 웹소켓 연결  https://ehlek.com/wiki/upbit/1.2/
+        function connectWS() {
+            if(socket != undefined){
+                socket.close();
+            }
+            
+            socket = new WebSocket("wss://api.upbit.com/websocket/v1"); // 접속 주소 변경될 수 있으니 개발자 센터 
+            socket.binaryType = 'arraybuffer';
+
+            socket.onopen 	= function(e){ 
+                // BTC ticker, orderbook, trade
+                filterRequest('[{"ticket":"doge-watcher"},{"type":"ticker","codes":["'+price.c+'"]}]'); 
+            }
+            socket.onclose 	= function(e){ 
+                socket = undefined; 
+            }
+            socket.onmessage= function(e){ 
+                var enc = new TextDecoder("utf-8");
+                var arr = new Uint8Array(e.data);
+                var str_d = enc.decode(arr);
+                var d = JSON.parse(str_d);
+                if(d.type == "ticker") { // 현재가
+                    
+                    //(현재가 - 매수가) / 현재가 x 100 = -47.671232876712324
+                    // var res=(d.trade_price-price.p)/price.p*100;
+                    
+                    document.querySelector("#output").innerText=d.trade_price +"   "+ percent_sting(d.trade_price, price.p);
+                    
+                }
+                if(d.type == "orderbook") { // 호가
+                }
+                if(d.type == "trade") { // 체결
+                }
+            }	
+        }
+        // 웹소켓 연결 해제
+        function closeWS() {
+            if(socket != undefined){
+                socket.close();
+                socket = undefined;
+            }	
+        }
+
+        // 웹소켓 요청
+        function filterRequest(filter) {
+            if(socket == undefined){
+                alert('no connect exists');
+                return;
+            }
+            socket.send(filter);
+        }
+
+        connectWS();
+
+        //url 파라미터 객체로 담아주는 함수
+        function get_query() {
+            var url = document.location.href;
+            if(url.indexOf('?')=='-1'){
+                return result=false;    
+            }
+            var qs = url.substring(url.indexOf('?') + 1).split('&');
+            for (var i = 0, result = {}; i < qs.length; i++) {
+                qs[i] = qs[i].split('=');
+                result[qs[i][0]] = decodeURIComponent(qs[i][1]);
+            }
+            return result;
+        }
+
+
+        function percent_sting(present_num, constant_number) {
+            var res=(present_num-constant_number)/constant_number*100;
+            return res.toFixed(2)+"%";
+        }
+
+    </script>
+    <style>
+        #output{
+            font-size: 100px;
+            font-weight: bold;
+            color: #ffffff; 
+            -webkit-text-stroke: 2px rgb(0, 0, 0);
+        }
+    </style>
+</head>
+<body>
+    
+    <span id="output"></span>
+</body>
+</html>
