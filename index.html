@@ -11,7 +11,8 @@
             price = {
                 //c: 'KRW-DOGE',
                 c: 'KRW-DOGE',
-                p: 730
+                p: 730,
+                mode:'percent', //both , price, percent
             };    
         }
         
@@ -46,8 +47,21 @@
                     
                     //(현재가 - 매수가) / 현재가 x 100 = -47.671232876712324
                     // var res=(d.trade_price-price.p)/price.p*100;
-                    
-                    document.querySelector("#output").innerText=percent_sting(d.trade_price, price.p);
+                    switch (price.mode){
+                        case 'both':
+                            document.querySelector("#output").innerText=d.trade_price +"   "+ percent_sting(d.trade_price, price.p);
+                            break;
+                        case 'price':
+                            document.querySelector("#output").innerText=d.trade_price;
+                            break;
+                        case 'percent':
+                            document.querySelector("#output").innerText=percent_sting(d.trade_price, price.p);
+                            break;
+                        default:
+                            document.querySelector("#output").innerText=percent_sting(d.trade_price, price.p);
+                    }
+
+                    //document.querySelector("#output").innerText=d.trade_price +"   "+ percent_sting(d.trade_price, price.p);
                     
                 }
                 if(d.type == "orderbook") { // 호가
